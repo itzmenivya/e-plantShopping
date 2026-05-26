@@ -2,59 +2,58 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { removeItem, updateQuantity } from './CartSlice';
 import './CartItem.css';
-
+ 
 const CartItem = ({ onContinueShopping }) => {
   const cart = useSelector(state => state.cart.items);
   const dispatch = useDispatch();
-
+ 
   // Calculate total amount for all products in the cart
   const calculateTotalAmount = () => {
     let totalAmount = 0;
-    cart.forEach((item)=> {
-        totalAmount +=item.Amount;
+    cart.forEach((item) => {
+      let numericCost = parseFloat(item.cost.replace('$', ''));
+      totalAmount += item.quantity * numericCost;
     });
-    };
-    return totalAmount;
+    return totalAmount; // BUG FIX 1: moved return inside the function (was outside due to misplaced closing brace)
   };
+ 
   const handleContinueShopping = (e) => {
     e.preventDefault();
     onContinueShopping(e);
   };
-
-
+ 
   const handleIncrement = (item) => {
-    dispatch(updateQuantity({name: item.name,quantity:item.quantity+1}));
+    dispatch(updateQuantity({ name: item.name, quantity: item.quantity + 1 }));
   };
-
+ 
   const handleDecrement = (item) => {
-   if(item.quantity>1) {
-    dispatch(updateQuantity({name:item.name,quantity:
-    item.quantity-1 }));
-   }
-   else{
-    dispatch(removeItem(item.name));
-   }
+    if (item.quantity > 1) {
+      dispatch(updateQuantity({ name: item.name, quantity: item.quantity - 1 }));
+    } else {
+      dispatch(removeItem(item.name));
+    }
   };
-
+ 
   const handleRemove = (item) => {
     dispatch(removeItem(item.name));
   };
-
-  // Calculate total cost based on quantity for an item
+ 
+  // Calculate total cost based on quantity for an individual item
   const calculateTotalCost = (item) => {
-    let totalAmount = 0;
-    cart.forEach((item) => {
-      // Remove the '$' sign and convert the string to a number
-      let numericCost = parseFloat(item.cost.replace('$', ''));
-      totalAmount += item.quantity * numericCost;
+    // BUG FIX 2: removed the incorrect forEach loop that shadowed the `item` param
+    // and never returned a value. Now correctly computes cost for the given item.
+    let numericCost = parseFloat(item.cost.replace('$', ''));
+    return (item.quantity * numericCost).toFixed(2);
   };
+ 
+  // BUG FIX 3: handleCheckoutShopping is now wired to the Checkout button below
   const handleCheckoutShopping = (e) => {
-  alert('Functionality to be added for future reference');
-};
-
+    alert('Coming Soon');
+  };
+ 
   return (
     <div className="cart-container">
-      <h2 style={{ color: 'black' }}>Total Cart Amount: ${calculateTotalAmount()}</h2>
+      <h2 style={{ color: 'black' }}>Total Cart Amount: ${calculateTotalAmount().toFixed(2)}</h2>
       <div>
         {cart.map(item => (
           <div className="cart-item" key={item.name}>
@@ -77,12 +76,11 @@ const CartItem = ({ onContinueShopping }) => {
       <div className="continue_shopping_btn">
         <button className="get-started-button" onClick={(e) => handleContinueShopping(e)}>Continue Shopping</button>
         <br />
-        <button className="get-started-button1">Checkout</button>
+        {/* BUG FIX 3: Checkout button now calls handleCheckoutShopping */}
+        <button className="get-started-button1" onClick={(e) => handleCheckoutShopping(e)}>Checkout</button>
       </div>
     </div>
   );
 };
-
+ 
 export default CartItem;
-
-
